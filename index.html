@@ -41,20 +41,20 @@
         alert("Your browser does not support WebGL");
       }
 
-      // Set clear color to black, fully opaque
-      gl.clearColor(0.0, 0.0, 0.0, 1.0);
-      // Clear the color buffer with specified clear color
-      gl.clear(gl.COLOR_BUFFER_BIT);
+      // // Set clear color to black, fully opaque
+      // gl.clearColor(0.0, 0.0, 0.0, 0.7);
+      // // Clear the color buffer with specified clear color
+      // gl.clear(gl.COLOR_BUFFER_BIT);
 
       // Vertex shader program
       const vsSource = `
         attribute vec4 aVertexPosition;
+        uniform mat4 uTranslationMatrix;
         varying vec2 posColor;
 
         void main(void) {
           posColor = aVertexPosition.xy;
-          gl_PointSize = 5.0;
-          gl_Position = aVertexPosition;
+          gl_Position = uTranslationMatrix * aVertexPosition;
         }
       `;
 
@@ -86,6 +86,18 @@
       // Here's where we call the routine that builds all the
       // objects we'll be drawing.
       const buffers = initBuffers(gl);
+
+      // Variables to track position and velocity
+      let squarePosition = [0.0, 0.1];
+      let squareVelocity = [0.01, 0.01];
+
+      // Start the animation loop
+      function animate() {
+        updatePosition();
+        drawScene(gl, programInfo, buffers);
+        requestAnimationFrame(animate);
+      }
+      animate();
 
       // Draw the scene
       drawScene(gl, programInfo, buffers);
@@ -164,6 +176,21 @@
         };
       }
 
+      // Update the position of the square
+      function updatePosition() {
+        // Update position
+        squarePosition[0] += squareVelocity[0];
+        squarePosition[1] += squareVelocity[1];
+
+        // Check for boundary collisions and reverse velocity if needed
+        if (squarePosition[0] + 0.2 >= 1.0 || squarePosition[0] - 0.2 <= -1.0) {
+          squareVelocity[0] = -squareVelocity[0];
+        }
+        if (squarePosition[1] + 0.1 >= 1.0 || squarePosition[1] - 0.1 <= -1.0) {
+          squareVelocity[1] = -squareVelocity[1];
+        }
+      }
+
       // Draw the scene.
       function drawScene(gl, programInfo, buffers) {
         // Clear the canvas before we start drawing on it.
@@ -201,8 +228,34 @@
         // Tell WebGL to use our program when drawing
         gl.useProgram(programInfo.program);
 
-        // Set the shader uniforms
+        // Set the translation matrix
+        const translationMatrix = [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          squarePosition[0],
+          squarePosition[1],
+          0.0,
+          1.0,
+        ];
 
+        // Set the translation matrix uniform
+        const uTranslationMatrix = gl.getUniformLocation(
+          programInfo.program,
+          "uTranslationMatrix"
+        );
+        gl.uniformMatrix4fv(uTranslationMatrix, false, translationMatrix);
+
+        // Draw the square
         {
           const offset = 0;
           const vertexCount = 4;
