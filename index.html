@@ -48,18 +48,25 @@
 
       // Vertex shader program
       const vsSource = `
-    attribute vec4 aVertexPosition;
-    void main(void) {
-      gl_Position = aVertexPosition;
-    }
-  `;
+        attribute vec4 aVertexPosition;
+        varying vec2 posColor;
+
+        void main(void) {
+          posColor = aVertexPosition.xy;
+          gl_PointSize = 5.0;
+          gl_Position = aVertexPosition;
+        }
+      `;
 
       // Fragment shader program
       const fsSource = `
-    void main(void) {
-      gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); // White color
-    }
-  `;
+        precision mediump float;
+        varying vec2 posColor;
+
+        void main(void) {
+          gl_FragColor = vec4(posColor.x, posColor.y, 0.0, 1.0); // White color
+        }
+      `;
 
       // Initialize a shader program; this is where all the lighting
       // for the vertices and so forth is established.
@@ -201,7 +208,8 @@
           const vertexCount = 4;
           // gl.drawArrays(gl.LINES, offset, vertexCount);
           // gl.drawArrays(gl.LINE_STRIP, offset, vertexCount);
-          gl.drawArrays(gl.LINE_LOOP, offset, vertexCount);
+          // gl.drawArrays(gl.LINE_LOOP, offset, vertexCount);
+          gl.drawArrays(gl.POINTS, offset, vertexCount);
         }
       }
     </script>
