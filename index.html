@@ -41,68 +41,183 @@
         alert("Your browser does not support WebGL");
       }
 
-      // // Set clear color to black, fully opaque
-      // gl.clearColor(0.0, 0.0, 0.0, 0.7);
-      // // Clear the color buffer with specified clear color
-      // gl.clear(gl.COLOR_BUFFER_BIT);
+      // Copilot prompt:
+      /*  "The shader source code in this project is written as a string. 
+            Can I set the project so that this WebGL application 
+            can read the vertex and fragment shader source codes 
+            from separate .glsl files?"
+        */
 
-      // Vertex shader program
-      const vsSource = `
-        attribute vec4 aVertexPosition;
-        uniform mat4 uTranslationMatrix;
-        varying vec2 posColor;
-
-        void main(void) {
-          posColor = aVertexPosition.xy;
-          gl_Position = uTranslationMatrix * aVertexPosition;
-        }
-      `;
-
-      // Fragment shader program
-      const fsSource = `
-        precision mediump float;
-        varying vec2 posColor;
-
-        void main(void) {
-          gl_FragColor = vec4(posColor.x, posColor.y, 0.0, 1.0); // White color
-        }
-      `;
-
-      // Initialize a shader program; this is where all the lighting
-      // for the vertices and so forth is established.
-      const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
-
-      // Collect all the info needed to use the shader program.
-      const programInfo = {
-        program: shaderProgram,
-        attribLocations: {
-          vertexPosition: gl.getAttribLocation(
-            shaderProgram,
-            "aVertexPosition"
-          ),
-        },
-      };
-
-      // Here's where we call the routine that builds all the
-      // objects we'll be drawing.
-      const buffers = initBuffers(gl);
-
-      // Variables to track position and velocity
-      let squarePosition = [0.0, 0.1];
-      let squareVelocity = [0.01, 0.01];
-
-      // Start the animation loop
-      function animate() {
-        updatePosition();
-        drawScene(gl, programInfo, buffers);
-        requestAnimationFrame(animate);
+      // Function to load shader source code from a file
+      async function loadShaderSource(url) {
+        const response = await fetch(url);
+        return await response.text();
       }
-      animate();
 
-      // Draw the scene
-      drawScene(gl, programInfo, buffers);
+      // Initialize shaders and start the WebGL application
+      async function main() {
+        const vsSource = await loadShaderSource("vertex.glsl");
+        const fsSource = await loadShaderSource("fragment.glsl");
 
-      // Initialize the shader program, so WebGL knows how to draw our data
+        // Initialize a shader program; this is where all the lighting
+        // for the vertices and so forth is established.
+        const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+
+        // Collect all the info needed to use the shader program.
+        // Look up which attribute our shader program is using
+        // for aVertexPosition and look up uniform locations.
+        const programInfo = {
+          program: shaderProgram,
+          attribLocations: {
+            vertexPosition: gl.getAttribLocation(
+              shaderProgram,
+              "aVertexPosition"
+            ),
+          },
+          // Add other uniform locations if needed
+        };
+
+        // Continue with the rest of your WebGL setup and rendering code
+        // Here's where we call the routine that builds all the
+        // objects we'll be drawing.
+        const buffers = initBuffers(gl);
+
+        // Variables to track position and velocity
+        let squarePosition = [0.0, 0.0];
+        let squareVelocity = [0.01, 0.02];
+
+        // Start the animation loop
+        function animate() {
+          updatePosition();
+          drawScene(gl, programInfo, buffers);
+          requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Initialize the buffers we'll need. For this demo, we just
+        // have one object -- a simple two-dimensional square.
+        function initBuffers(gl) {
+          // Create a buffer for the square's positions.
+          const positionBuffer = gl.createBuffer();
+
+          // Select the positionBuffer as the one to apply buffer
+          // operations to from here out.
+          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+          // Now create an array of positions for the square.
+          const positions = [-0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5];
+
+          // Now pass the list of positions into WebGL to build the
+          // shape. We do this by creating a Float32Array from the
+          // JavaScript array, then use it to fill the current buffer.
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(positions),
+            gl.STATIC_DRAW
+          );
+
+          return {
+            position: positionBuffer,
+          };
+        }
+
+        // Update the position of the square
+        function updatePosition() {
+          // Update position
+          squarePosition[0] += squareVelocity[0];
+          squarePosition[1] += squareVelocity[1];
+
+          // Check for boundary collisions and reverse velocity if needed
+          if (
+            squarePosition[0] + 0.5 >= 1.0 ||
+            squarePosition[0] - 0.5 <= -1.0
+          ) {
+            squareVelocity[0] = -squareVelocity[0];
+          }
+          if (
+            squarePosition[1] + 0.5 >= 1.0 ||
+            squarePosition[1] - 0.5 <= -1.0
+          ) {
+            squareVelocity[1] = -squareVelocity[1];
+          }
+        }
+
+        // Draw the scene.
+        function drawScene(gl, programInfo, buffers) {
+          // Clear the canvas before we start drawing on it.
+          gl.clearColor(0.1, 0.1, 0.0, 1.0); // Clear to black, fully opaque
+          gl.clearDepth(1.0); // Clear everything
+          gl.enable(gl.DEPTH_TEST); // Enable depth testing
+          gl.depthFunc(gl.LEQUAL); // Near things obscure far things
+
+          // Clear the canvas before we start drawing on it.
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+          // Tell WebGL how to pull out the positions from the position
+          // buffer into the vertexPosition attribute.
+          {
+            const numComponents = 2; // pull out 2 values per iteration
+            const type = gl.FLOAT; // the data in the buffer is 32bit floats
+            const normalize = false; // don't normalize
+            const stride = 0; // how many bytes to get from one set of values to the next
+            // 0 = use type and numComponents above
+            const offset = 0; // how many bytes inside the buffer to start from
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+            gl.vertexAttribPointer(
+              programInfo.attribLocations.vertexPosition,
+              numComponents,
+              type,
+              normalize,
+              stride,
+              offset
+            );
+            gl.enableVertexAttribArray(
+              programInfo.attribLocations.vertexPosition
+            );
+          }
+
+          // Tell WebGL to use our program when drawing
+          gl.useProgram(programInfo.program);
+
+          // Set the translation matrix
+          const translationMatrix = [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            squarePosition[0],
+            squarePosition[1],
+            0.0,
+            1.0,
+          ];
+
+          // Set the translation matrix uniform
+          const uTranslationMatrix = gl.getUniformLocation(
+            programInfo.program,
+            "uTranslationMatrix"
+          );
+          gl.uniformMatrix4fv(uTranslationMatrix, false, translationMatrix);
+
+          // Draw the square
+          {
+            const offset = 0;
+            const vertexCount = 4;
+            gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+          }
+        }
+      }
+
+      main();
+
+      // Initialize a shader program, so WebGL knows how to draw our data
       function initShaderProgram(gl, vsSource, fsSource) {
         const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
         const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
@@ -125,7 +240,7 @@
         return shaderProgram;
       }
 
-      // Creates a shader of the given type, uploads the source and
+      // creates a shader of the given type, uploads the source and
       // compiles it.
       function loadShader(gl, type, source) {
         const shader = gl.createShader(type);
@@ -147,128 +262,6 @@
         }
 
         return shader;
-      }
-
-      // Initialize the buffers we'll need. For this demo, we just
-      // have one object -- a simple line.
-      function initBuffers(gl) {
-        // Create a buffer for the line's positions.
-        const positionBuffer = gl.createBuffer();
-
-        // Select the positionBuffer as the one to apply buffer
-        // operations to from here out.
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-        // Now create an array of positions for the line.
-        const positions = [-0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5];
-
-        // Now pass the list of positions into WebGL to build the
-        // shape. We do this by creating a Float32Array from the
-        // JavaScript array, then use it to fill the current buffer.
-        gl.bufferData(
-          gl.ARRAY_BUFFER,
-          new Float32Array(positions),
-          gl.STATIC_DRAW
-        );
-
-        return {
-          position: positionBuffer,
-        };
-      }
-
-      // Update the position of the square
-      function updatePosition() {
-        // Update position
-        squarePosition[0] += squareVelocity[0];
-        squarePosition[1] += squareVelocity[1];
-
-        // Check for boundary collisions and reverse velocity if needed
-        if (squarePosition[0] + 0.2 >= 1.0 || squarePosition[0] - 0.2 <= -1.0) {
-          squareVelocity[0] = -squareVelocity[0];
-        }
-        if (squarePosition[1] + 0.1 >= 1.0 || squarePosition[1] - 0.1 <= -1.0) {
-          squareVelocity[1] = -squareVelocity[1];
-        }
-      }
-
-      // Draw the scene.
-      function drawScene(gl, programInfo, buffers) {
-        // Clear the canvas before we start drawing on it.
-        gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
-        gl.clearDepth(1.0); // Clear everything
-        gl.enable(gl.DEPTH_TEST); // Enable depth testing
-        gl.depthFunc(gl.LEQUAL); // Near things obscure far things
-
-        // Clear the canvas before we start drawing on it.
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        // Tell WebGL how to pull out the positions from the position
-        // buffer into the vertexPosition attribute.
-        {
-          const numComponents = 2; // pull out 2 values per iteration
-          const type = gl.FLOAT; // the data in the buffer is 32bit floats
-          const normalize = false; // don't normalize
-          const stride = 0; // how many bytes to get from one set of values to the next
-          // 0 = use type and numComponents above
-          const offset = 0; // how many bytes inside the buffer to start from
-          gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-          gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexPosition,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset
-          );
-          gl.enableVertexAttribArray(
-            programInfo.attribLocations.vertexPosition
-          );
-        }
-
-        // Tell WebGL to use our program when drawing
-        gl.useProgram(programInfo.program);
-
-        // Set the translation matrix
-        const translationMatrix = [
-          1.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          1.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          1.0,
-          0.0,
-          squarePosition[0],
-          squarePosition[1],
-          0.0,
-          1.0,
-        ];
-
-        // Set the translation matrix uniform
-        const uTranslationMatrix = gl.getUniformLocation(
-          programInfo.program,
-          "uTranslationMatrix"
-        );
-        gl.uniformMatrix4fv(uTranslationMatrix, false, translationMatrix);
-
-        // Draw the square
-        {
-          const offset = 0;
-          const vertexCount = 4;
-          // gl.drawArrays(gl.LINES, offset, vertexCount);
-          // gl.drawArrays(gl.LINE_STRIP, offset, vertexCount);
-          // gl.drawArrays(gl.LINE_LOOP, offset, vertexCount);
-
-          // gl.drawArrays(gl.POINTS, offset, vertexCount);
-
-          // gl.drawArrays(gl.TRIANGLES, offset, vertexCount);
-          gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
-          // gl.drawArrays(gl.TRIANGLE_FAN, offset, vertexCount);
-        }
       }
     </script>
   </body>
