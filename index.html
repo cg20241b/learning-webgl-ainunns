@@ -110,13 +110,21 @@
             viewMatrix: gl.getUniformLocation(shaderProgram, "uViewMatrix"),
             uSampler: gl.getUniformLocation(shaderProgram, "uSampler"),
             ambientLight: gl.getUniformLocation(shaderProgram, "uAmbientLight"),
-            directionalLightColor: gl.getUniformLocation(
+            // directionalLightColor: gl.getUniformLocation(
+            //   shaderProgram,
+            //   "uDirectionalLightColor"
+            // ),
+            // directionalLightDirection: gl.getUniformLocation(
+            //   shaderProgram,
+            //   "uDirectionalLightDirection"
+            // ),
+            diffuseLightColor: gl.getUniformLocation(
               shaderProgram,
-              "uDirectionalLightColor"
+              "uDiffuseLightColor"
             ),
-            directionalLightDirection: gl.getUniformLocation(
+            pointLightPosition: gl.getUniformLocation(
               shaderProgram,
-              "uDirectionalLightDirection"
+              "uPointLightPosition"
             ),
           },
           // Add other uniform locations if needed
@@ -543,16 +551,28 @@
           );
 
           // Define the direction light properties
-          const directionalLightColor = [1.0, 1.0, 1.0]; // white light
-          const directionalLightDirection = [-1.0, 0.0, 0.0]; // Light coming from the front
+          // const directionalLightColor = [1.0, 1.0, 1.0]; // white light
+          // const directionalLightDirection = [-1.0, 0.0, 0.0]; // Light coming from the front
 
+          // gl.uniform3fv(
+          //   programInfo.uniformLocations.directionalLightColor,
+          //   directionalLightColor
+          // );
+          // gl.uniform3fv(
+          //   programInfo.uniformLocations.directionalLightDirection,
+          //   directionalLightDirection
+          // );
+
+          // Define the point light properties
+          const diffuseLightColor = [1.0, 1.0, 1.0]; // White light
+          const pointLightPosition = [5.0, 5.0, 5.0]; // Light coming from the front
           gl.uniform3fv(
-            programInfo.uniformLocations.directionalLightColor,
-            directionalLightColor
+            programInfo.uniformLocations.diffuseLightColor,
+            diffuseLightColor
           );
           gl.uniform3fv(
-            programInfo.uniformLocations.directionalLightDirection,
-            directionalLightDirection
+            programInfo.uniformLocations.pointLightPosition,
+            pointLightPosition
           );
 
           // Draw the cube
