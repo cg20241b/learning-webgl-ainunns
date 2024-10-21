@@ -26,6 +26,18 @@
   <body>
     <canvas id="glCanvas"></canvas>
     <script>
+      let isPaused = false;
+
+      function toggleAnimation() {
+        isPaused = !isPaused;
+      }
+
+      document.addEventListener("keydown", function (event) {
+        if (event.code === "Space") {
+          toggleAnimation();
+        }
+      });
+
       // Initialize WebGL context
       const canvas = document.getElementById("glCanvas");
       const gl = canvas.getContext("webgl");
@@ -117,10 +129,12 @@
 
         // Start the animation loop
         function animate() {
-          updatePosition();
-          updateRotation();
+          if (!isPaused) {
+            updatePosition();
+            updateRotation();
 
-          drawScene(gl, programInfo, buffers);
+            drawScene(gl, programInfo, buffers);
+          }
           requestAnimationFrame(animate);
         }
         animate();
