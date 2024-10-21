@@ -1,9 +1,12 @@
 attribute vec3 aVertexPosition;
 attribute vec2 aTextureCoord;
 attribute vec4 aVertexColor;
+attribute vec3 aVertexNormal;
 
 varying vec2 vTextureCoord;
 varying vec4 vColor;
+varying vec3 vNormal;
+varying vec3 vPosition;
 
 uniform mat4 uTranslationMatrix;
 uniform mat4 uZRotationMatrix;
@@ -17,5 +20,7 @@ void main(void) {
     gl_Position = uProjectionMatrix * uViewMatrix * modelMatrix * position;
     // gl_Position = uYRotationMatrix * uZRotationMatrix * uTranslationMatrix * position;
     vTextureCoord = aTextureCoord;
+    vNormal = mat3(modelMatrix) * aVertexNormal;
+    vPosition = vec3(modelMatrix * position);
     vColor = aVertexColor;
 }
