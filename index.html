@@ -91,15 +91,15 @@
             vertexNormal: gl.getAttribLocation(shaderProgram, "aVertexNormal"),
           },
           uniformLocations: {
-            uTranslationMatrix: gl.getUniformLocation(
+            translationMatrix: gl.getUniformLocation(
               shaderProgram,
               "uTranslationMatrix"
             ),
-            uZRotationMatrix: gl.getUniformLocation(
+            zRotationMatrix: gl.getUniformLocation(
               shaderProgram,
               "uZRotationMatrix"
             ),
-            uYRotationMatrix: gl.getUniformLocation(
+            yRotationMatrix: gl.getUniformLocation(
               shaderProgram,
               "uYRotationMatrix"
             ),
@@ -108,7 +108,7 @@
               "uProjectionMatrix"
             ),
             viewMatrix: gl.getUniformLocation(shaderProgram, "uViewMatrix"),
-            uSampler: gl.getUniformLocation(shaderProgram, "uSampler"),
+            sampler: gl.getUniformLocation(shaderProgram, "uSampler"),
             ambientLight: gl.getUniformLocation(shaderProgram, "uAmbientLight"),
             // directionalLightColor: gl.getUniformLocation(
             //   shaderProgram,
@@ -445,7 +445,7 @@
           // Bind the texture to texture unit 0
           gl.bindTexture(gl.TEXTURE_2D, texture);
           // Tell the shader we bound the texture to texture unit 0
-          // gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
+          // gl.uniform1i(programInfo.uniformLocations.sampler, 0);
 
           // Tell WebGL to use our program when drawing
           gl.useProgram(programInfo.program);
@@ -510,17 +510,17 @@
 
           // Set the translation matrix uniform
           gl.uniformMatrix4fv(
-            programInfo.uniformLocations.uTranslationMatrix,
+            programInfo.uniformLocations.translationMatrix,
             false,
             translationMatrix
           );
           gl.uniformMatrix4fv(
-            programInfo.uniformLocations.uZRotationMatrix,
+            programInfo.uniformLocations.zRotationMatrix,
             false,
             zRotationMatrix
           );
           gl.uniformMatrix4fv(
-            programInfo.uniformLocations.uYRotationMatrix,
+            programInfo.uniformLocations.yRotationMatrix,
             false,
             yRotationMatrix
           );
