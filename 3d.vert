@@ -1,6 +1,10 @@
 attribute vec3 aVertexPosition;
 attribute vec2 aTextureCoord;
+attribute vec4 aVertexColor;
+
 varying vec2 vTextureCoord;
+varying vec4 vColor;
+
 uniform mat4 uTranslationMatrix;
 uniform mat4 uZRotationMatrix;
 uniform mat4 uYRotationMatrix;
@@ -13,4 +17,5 @@ void main(void) {
     gl_Position = uYRotationMatrix * uZRotationMatrix * uTranslationMatrix * position;
     //gl_Position = uZRotationMatrix * uTranslationMatrix * position;
     vTextureCoord = aTextureCoord;
+    vColor = aVertexColor;
 }
